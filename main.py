@@ -65,11 +65,10 @@ def main(book_id: str):
 
 
 if __name__ == '__main__':
-    # with ThreadPoolExecutor(max_workers=100) as executor:
-    for i in range(1, 70000):
-        main(str(i))
 
-    # with ProcessPoolExecutor(max_workers=16) as e:
-    # for i in range(7500, 8000):
-    #     e.submit(main, i)
-    # e.map(main, range(1, 10))
+    import argparse
+
+    main(str(1))
+    # for i in range(1, 70000):
+    #     main(str(i))
+
