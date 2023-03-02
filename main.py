@@ -4,6 +4,8 @@ from tqdm import tqdm
 from rich import print
 from concurrent.futures import ThreadPoolExecutor
 
+import models
+
 
 def _thread_chap(par, book_id, index, chapter_info):
     chapter_id = chapter_info.xpath("./@href").get()
@@ -33,20 +35,20 @@ def main(book_id: str):
     book_name = response.xpath("/html/body/div[2]/div[1]/div/div[2]/div[2]/h1/text()").get()
 
     if response:
-        book_info = {
-            "book_id": book_id,
-            "book_name": book_name,
-            "book_author": response.xpath("/html/body/div[2]/div[1]/div/div[2]/div[2]/h3/a/text()").get(),
-            "book_last_update_time": response.xpath(
+        book_info = models.BookInfo(
+            book_id=book_id,
+            book_name=book_name,
+            book_author=response.xpath("/html/body/div[2]/div[1]/div/div[2]/div[2]/h3/a/text()").get(),
+            book_last_update_time=response.xpath(
                 "/html/body/div[2]/div[1]/div/div[2]/div[2]/p[2]/font/text()").get(),
-            "book_url": f"http://www.kuaishuku.net/{book_id}/",
-            "book_cover": "http://www.kuaishuku.net" + response.xpath(
+            book_url=f"http://www.kuaishuku.net/{book_id}/",
+            book_cover="http://www.kuaishuku.net" + response.xpath(
                 "/html/body/div[2]/div[1]/div/div[2]/div[1]/img/@src").get(),
-        }
+        )
         if database.database_book_info.get(book_id):
-            database.database_book_info.update_many(book_id, book_info)
+            database.database_book_info.update_many(book_id, book_info.dict())
         else:
-            database.database_book_info.insert(book_id, book_info)
+            database.database_book_info.insert(book_id, book_info.dict())
 
         chapter_info_list = response.xpath("/html/body/div[2]/div[3]/div/div/div[2]/ul/li/a")
         par = tqdm(total=len(chapter_info_list.getall()), desc=book_name)
