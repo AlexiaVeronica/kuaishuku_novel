@@ -56,8 +56,6 @@ def main(book_id: str):
             for index, chapter_info in enumerate(chapter_info_list):
                 executor.submit(_thread_chap, par, book_id, index, chapter_info)
 
-        # for index, chapter_info in enumerate(chapter_info_list):
-        #     _thread_chap(par, book_id, index, chapter_info)
         par.close()
 
     database.database_book_info.save()
@@ -68,7 +66,18 @@ if __name__ == '__main__':
 
     import argparse
 
-    main(str(1))
-    # for i in range(1, 70000):
-    #     main(str(i))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--download", nargs="?", help="download book")
+    parser.add_argument("-u", "--update", nargs="?", help="update book")
+    parser.add_argument("-s", "--search", nargs="?", help="search book")
 
+    args = parser.parse_args()
+
+    if args.download:
+        main(args.download)
+    elif args.update:
+        pass
+    elif args.search:
+        pass
+    else:
+        parser.print_help()
