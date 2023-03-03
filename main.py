@@ -1,8 +1,9 @@
 import app
 import lib
 import models
-import database
 
+import argparse
+import database
 from tqdm import tqdm
 from rich import print
 from concurrent.futures import ThreadPoolExecutor
@@ -31,7 +32,7 @@ def _thread_chap(par, book_id, index, chapter_info):
         par.update(1)
 
 
-def main(book_id: str):
+def current_download_book(book_id: str):
     book_info = app.get_book_info_by_book_id(book_id)  # type: models.BookInfo
     if book_info:
         if database.database_book_info.get(book_info.book_id):
@@ -49,11 +50,12 @@ def main(book_id: str):
         database.database_book_info.save()
         database.database_chapter_info.save()
 
+def current_download_search_book(book_name: str):
+    app.get_book_info_by_book_name(book_name)
+
+
 
 if __name__ == '__main__':
-
-    import argparse
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--download", nargs="?", help="download book")
     parser.add_argument("-u", "--update", nargs="?", help="update book")
@@ -62,10 +64,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.download:
-        main(args.download)
+        current_download_book(args.download)
     elif args.update:
         pass
     elif args.search:
-        pass
+        current_download_search_book(args.search)
     else:
         parser.print_help()

@@ -15,3 +15,13 @@ def get_book_info_by_book_id(book_id: str) -> models.BookInfo:
             book_cover=response.xpath("/html/body/div[2]/div[1]/div/div[2]/div[1]/img/@src").get(),
             chapter_info_list=response.xpath("/html/body/div[2]/div[3]/div/div/div[2]/ul/li/a")
         )
+
+
+
+
+def get_book_info_by_book_name(book_name: str) :
+    url = f"https://www.kuaishuku.net/search.php?searchkey={book_name}"
+    response = lib.get_html(url)
+    if response:
+        book_info_list = response.xpath("/html/body/div[1]/div/div[2]/table/tbody/tr/td[2]/div/a")
+        print(book_info_list.getall())
