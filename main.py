@@ -1,10 +1,11 @@
-import database
+import app
 import lib
+import models
+import database
+
 from tqdm import tqdm
 from rich import print
 from concurrent.futures import ThreadPoolExecutor
-
-import models
 
 
 def _thread_chap(par, book_id, index, chapter_info):
@@ -31,37 +32,22 @@ def _thread_chap(par, book_id, index, chapter_info):
 
 
 def main(book_id: str):
-    response = lib.get_html(f"http://www.kuaishuku.net/{book_id}/")
-    book_name = response.xpath("/html/body/div[2]/div[1]/div/div[2]/div[2]/h1/text()").get()
-
-    if response:
-        book_info = models.BookInfo(
-            book_id=book_id,
-            book_name=book_name,
-            book_author=response.xpath("/html/body/div[2]/div[1]/div/div[2]/div[2]/h3/a/text()").get(),
-            book_last_update_time=response.xpath(
-                "/html/body/div[2]/div[1]/div/div[2]/div[2]/p[2]/font/text()").get(),
-            book_url=f"http://www.kuaishuku.net/{book_id}/",
-            book_cover="http://www.kuaishuku.net" + response.xpath(
-                "/html/body/div[2]/div[1]/div/div[2]/div[1]/img/@src").get(),
-        )
-        if database.database_book_info.get(book_id):
-            database.database_book_info.update_many(book_id, book_info.dict())
+    book_info = app.get_book_info_by_book_id(book_id)  # type: models.BookInfo
+    if book_info:
+        if database.database_book_info.get(book_info.book_id):
+            database.database_book_info.update_many(book_info.book_id, book_info.dict())
         else:
-            database.database_book_info.insert(book_id, book_info.dict())
+            database.database_book_info.insert(book_info.book_id, book_info.dict())
 
-        chapter_info_list = response.xpath("/html/body/div[2]/div[3]/div/div/div[2]/ul/li/a")
-        par = tqdm(total=len(chapter_info_list.getall()), desc=book_name)
+        par = tqdm(total=len(book_info.chapter_info_list.getall()), desc=book_info.book_name)
 
-        # print(database_chapter_info.find_all())
         with ThreadPoolExecutor(max_workers=32) as executor:
-            for index, chapter_info in enumerate(chapter_info_list):
-                executor.submit(_thread_chap, par, book_id, index, chapter_info)
+            for index, chapter_info in enumerate(book_info.chapter_info_list):
+                executor.submit(_thread_chap, par, book_info.book_id, index, chapter_info)
 
         par.close()
-
-    database.database_book_info.save()
-    database.database_chapter_info.save()
+        database.database_book_info.save()
+        database.database_chapter_info.save()
 
 
 if __name__ == '__main__':
